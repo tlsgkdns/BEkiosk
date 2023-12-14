@@ -1,15 +1,53 @@
+import kotlinx.coroutines.*
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.time.LocalDateTime
+import kotlin.concurrent.thread
+
 class KioskProgram {
     private var money: Int = 0
     private var menuList = arrayOf(MenuBoard("생과일", 1), MenuBoard("주스", 2), MenuBoard("탕후루", 3))
     private var cart = Cart()
+    private var waitOrder = 0
+    private var programEnd = false
     init
     {
         addMenus(menuList)
         println("과일 가게에 오신 것을 환영합니다!")
         runProgram()
     }
+    private fun checkAvailableTime(): Boolean
+    {
+        val now = LocalDateTime.now()
+        if(now.hour == 11 && now.minute >= 30 && now.minute <= 40)
+        {
+            println("11시 30분부터 11시 40분 사이는 점검 시간이므로 결제할 수 없습니다.")
+            return false
+        }
+        return true
+    }
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun delayProgram()
+    {
+        val delayCoroutine = GlobalScope.launch {
+            delay(3000)
+        }
+        runBlocking {  delayCoroutine.join()}
+    }
     private fun runProgram()
     {
+        thread(start = true)
+        {
+            while (!programEnd)
+            {
+                println("\n현재 주문 대기 수: $waitOrder\n")
+                runBlocking {
+                    launch {
+                        delay(5000)
+                    }
+                }
+            }
+        }
         while (true)
         {
             println("현재 소지하고 있는 금액: $money")
@@ -18,6 +56,7 @@ class KioskProgram {
             println("2. 돈 넣기")
             println("3. 결제하기")
             println("4. 프로그램 종료")
+
             var command = 0
             try {
                 command = readln().toInt()
@@ -26,12 +65,13 @@ class KioskProgram {
                 println("올바르지 않은 입력입니다.")
                 continue
             }
+            delayProgram()
             when(command)
             {
                 1 -> orderMenu()
                 2 -> insertMoney()
-                3 -> payCart()
-                4 -> break
+                3 -> if(checkAvailableTime()) payCart()
+                4 -> {programEnd = true; break}
                 else -> {
                     println("올바르지 않은 입력입니다.")
                 }
@@ -44,6 +84,7 @@ class KioskProgram {
         println("결제하시겠습니까?")
         println("결제는 1, 메인메뉴로 돌아가려면 아무거나 입력해주세요")
         val answer = readln()
+        delayProgram()
         if(answer == "1")
         {
             money = cart.payProducts(money)
@@ -71,6 +112,7 @@ class KioskProgram {
                 println("돈을 잘못 넣었습니다. 다시 넣어주세여.")
                 continue
             }
+            delayProgram()
             money += addMoney
             break
         }
@@ -103,6 +145,7 @@ class KioskProgram {
     {
         while(true)
         {
+            println("[주문하기]")
             println("0. 메인메뉴로...")
             // 메뉴 보드 정보를 보여줌.
             for(menuBoard in menuList)
@@ -130,6 +173,7 @@ class KioskProgram {
                 println("유효하지 않은 번호입니다.")
                 continue
             }
+            delayProgram()
             selectMenu(boardSelection)
         }
     }
@@ -137,6 +181,7 @@ class KioskProgram {
     {
         while (true)
         {
+            println("[주문하기]")
             println("0. 뒤로 가기")
             // 메뉴 정보 보여줌.
             menuList[boardSelection- 1].displayMenu()
@@ -165,6 +210,7 @@ class KioskProgram {
                 println("해당 상품은 품절되었습니다. 다시 선택하세요")
                 continue
             }
+            delayProgram()
             inputMenuCount(boardSelection, menuSelection)
             // 끝.
             break
@@ -175,6 +221,20 @@ class KioskProgram {
         val selectedMenu = menuList[boardSelection - 1].getMenu(menuSelection)
         while (true)
         {
+            if(cart.isProductExist(selectedMenu))
+            {
+                println("해당 제품은 이미 존재합니다. 그래도 수정하시겠습니까?")
+                println("1. 네, 2. 아니요")
+                when(readln())
+                {
+                    "1" -> {}
+                    "2" ->{break}
+                    else -> {
+                        println("입력이 잘못되었습니다.")
+                        continue
+                    }
+                }
+            }
             selectedMenu.displayInfo();
             val availableCount = selectedMenu.getStoreCount().coerceAtMost(selectedMenu.getOrderCountLimit())
             println("해당 메뉴를 몇 개 주문하시겠습니까? 뒤로 가려면 음수 또는 0을 입력하세여. (최대 주문 갯수: $availableCount)")
@@ -196,6 +256,7 @@ class KioskProgram {
                 println("최대 주문 갯수를 초과하였습니다. 다시 입력해주세여.")
                 continue
             }
+            delayProgram()
             cart.addProduct(selectedMenu, orderCount)
             println("${selectedMenu.getName()} ${orderCount}개를 장바구니에 추가하였습니다.")
             break

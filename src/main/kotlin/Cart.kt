@@ -4,8 +4,14 @@ class Cart {
     fun addProduct(menu: Menu, count: Int)
     {
         val key = menu.getName()
+        if(cart.containsKey(key))
+            cost -= cart[key]!! * menu.getPrice()
         cart[key] = count
         cost += menu.getPrice() * count
+    }
+    fun isProductExist(menu: Menu): Boolean
+    {
+        return cart.containsKey(menu.getName())
     }
     fun payProducts(money: Int): Int
     {
