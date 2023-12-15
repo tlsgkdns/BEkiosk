@@ -1,14 +1,23 @@
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ofPattern
 
 fun main() {
     // 장바구니 더미 DB
     val cartMap = HashMap<Menu, Int>()
     // 잔고 더미 DB
     var clientWallet = 0
-
+    //프로그램을 종료할때까지 5초마다 현재 주문 대기수를 실시간으로 출력
+    GlobalScope.launch {
+        while (true) {
+            println(" (현재 주문 대기수: ${cartMap.entries.fold(0) {total, entry -> total + entry.value}})")
+            delay(5000)
+        }
+    }
     // 메뉴 보드 리스트
     val menuList = arrayOf(MenuBoard("생과일", 1), MenuBoard("주스", 2), MenuBoard("탕후루", 3))
 
@@ -24,7 +33,8 @@ fun main() {
         println("3. 프로그램 종료")
         val mainMenuSelection = checkReadlnValidation(1, 3)
         if (mainMenuSelection == -1) continue
-
+        // 3초 대기
+        awaitForNextTask()
         when (mainMenuSelection) {
             // 메뉴 구경하러 가기
             1 -> {
@@ -47,6 +57,9 @@ fun main() {
                 val boardSelection = checkReadlnValidation(1, limit)
                 if (boardSelection == -1) continue
 
+                // 3초 대기
+                awaitForNextTask()
+
                 when (boardSelection) {
                     1, 2, 3 -> {
                         // 메뉴 선택 프로그램.
@@ -60,6 +73,9 @@ fun main() {
                             if (menuSelection == -1) continue
                             if (menuSelection == 0) break
 
+                            // 3초 대기
+                            awaitForNextTask()
+
                             //상세 주문 여부 기능
                             while (true) {
                                 //선택한 세부 메뉴 정보 표시
@@ -70,6 +86,9 @@ fun main() {
                                 val putCartSelection = checkReadlnValidation(1, 2)
                                 if (putCartSelection == -1) continue
                                 if (putCartSelection == 2) break
+
+                                // 3초 대기
+                                awaitForNextTask()
 
                                 println("${chosenMenu.getName()}가 장바구니에 추가되었습니다.")
                                 cartMap[chosenMenu] = 1 + cartMap.getOrDefault(chosenMenu, 0)
@@ -82,7 +101,7 @@ fun main() {
                         println("아래와 같이 주문하시겠습니까?\n")
                         println("[Orders]")
                         //카트맵에 들어있는 제품만 필터해서 map으로 꺼내오기
-                        cartMap.forEach{
+                        cartMap.forEach {
                             println("${it.key.displayInfo()} | ${it.value}개 |")
                         }
                         println()
@@ -97,10 +116,13 @@ fun main() {
                         if (orderSelection == -1) continue
                         if (orderSelection == 2) continue
 
+                        // 3초 대기
+                        awaitForNextTask()
+
                         //점검시간 체크
                         val now = LocalDateTime.now()
-                        val startMaintainanceTime = LocalDateTime.of(now.toLocalDate(), LocalTime.of(0,0))
-                        val endMaintainanceTime = LocalDateTime.of(now.toLocalDate(), LocalTime.of(2,0))
+                        val startMaintainanceTime = LocalDateTime.of(now.toLocalDate(), LocalTime.of(0, 0))
+                        val endMaintainanceTime = LocalDateTime.of(now.toLocalDate(), LocalTime.of(2, 0))
                         val formatter = DateTimeFormatter.ofPattern("kk시mm분")
                         val formatter2 = DateTimeFormatter.ofPattern("kk시")
                         val formatter3 = DateTimeFormatter.ofPattern("yyyy-MM-dd kk:mm:ss")
@@ -145,10 +167,17 @@ fun main() {
                             if (cancelSelection == -1) continue
                             if (cancelSelection == 0) break
 
+                            // 3초 대기
+                            awaitForNextTask()
+
                             println("몇 개를 취소하시겠습니까? ${cartList[cancelSelection - 1].value}개까지 취소 가능.")
                             val cancelCountSelection = checkReadlnValidation(0, cartList[cancelSelection - 1].value)
                             if (cancelCountSelection == -1) continue
                             if (cancelCountSelection == 0) continue
+
+                            // 3초 대기
+                            awaitForNextTask()
+
                             cartMap[cartList[cancelSelection - 1].key] =
                                 cartMap[cartList[cancelSelection - 1].key]!! - cancelCountSelection
                             if (cartMap[cartList[cancelSelection - 1].key] == 0) {
@@ -165,6 +194,10 @@ fun main() {
                 println("얼마를 충전하시겠습니까? 최대 100만원까지 입금 가능.")
                 val moneyAmountToTransfer = checkReadlnValidation(1, 1000000)
                 if (moneyAmountToTransfer == -1) continue
+
+                // 3초 대기
+                awaitForNextTask()
+
                 clientWallet += moneyAmountToTransfer
                 println("$moneyAmountToTransfer 이 충전되었습니다.")
                 println("현재 잔고는 $clientWallet 입니다.")
@@ -173,12 +206,22 @@ fun main() {
             // 프로그램 종료
             3 -> {
                 println("프로그램을 종료합니다.")
+                // 3초 대기
+                awaitForNextTask()
                 break
             }
         }
 
     }
 
+}
+
+private fun awaitForNextTask() {
+    runBlocking {
+        launch {
+            delay(3000L)
+        }
+    }
 }
 
 //리턴값 -1일시 validation 불통과
