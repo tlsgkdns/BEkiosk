@@ -1,3 +1,8 @@
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ofPattern
+
 fun main() {
     // 장바구니 더미 DB
     val cartMap = HashMap<Menu, Int>()
@@ -92,13 +97,31 @@ fun main() {
                         if (orderSelection == -1) continue
                         if (orderSelection == 2) continue
 
+                        //점검시간 체크
+                        val now = LocalDateTime.now()
+                        val startMaintainanceTime = LocalDateTime.of(now.toLocalDate(), LocalTime.of(0,0))
+                        val endMaintainanceTime = LocalDateTime.of(now.toLocalDate(), LocalTime.of(2,0))
+                        val formatter = DateTimeFormatter.ofPattern("kk시mm분")
+                        val formatter2 = DateTimeFormatter.ofPattern("kk시")
+                        val formatter3 = DateTimeFormatter.ofPattern("yyyy-MM-dd kk:mm:ss")
+                        val formatedNow = formatter.format(now)
+                        val formatedTimeForSuccess = formatter3.format(now)
+                        val formatedStartMaintainanceTime = formatter2.format(startMaintainanceTime)
+                        val formatedEndMaintainanceTime = formatter2.format(endMaintainanceTime)
+
+                        if (startMaintainanceTime.isBefore(now) && endMaintainanceTime.isAfter(now)) {
+                            println("현재 시각은 ${formatedNow}입니다.")
+                            println("은행 점검 시간은 오전 ${formatedStartMaintainanceTime}부터 오전 ${formatedEndMaintainanceTime}까지 이므로 결제할 수 없습니다.")
+                            continue
+                        }
+
                         //잔고보다 적을시 뒤로
                         if (cartTotalAmount > clientWallet) {
                             println("현재 잔액은 ${clientWallet}원 으로 ${cartTotalAmount - clientWallet}원이 부족해서 주문할 수 없습니다.")
                             continue
                         }
                         clientWallet -= cartTotalAmount
-                        println("주문이 처리되었습니다! 이용해 주셔서 감사합니다.")
+                        println("주문이 처리되었습니다! 이용해 주셔서 감사합니다. ${formatedTimeForSuccess}")
                         println("현재 잔고는 $clientWallet 원입니다.")
                         continue
                     }
