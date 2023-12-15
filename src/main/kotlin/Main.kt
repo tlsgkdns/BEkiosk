@@ -74,10 +74,24 @@ fun main() {
                     }
                     // 장바구니 주문
                     4 -> {
+                        println("아래와 같이 주문하시겠습니까?\n")
+                        println("[Orders]")
                         //카트맵에 들어있는 제품만 필터해서 map으로 꺼내오기
+                        cartMap.forEach{
+                            println("${it.key.displayInfo()} | ${it.value}개 |")
+                        }
+                        println()
                         val cartTotalAmount = cartMap.map { menu ->
                             menu.key.getPrice() * menu.value
                         }.fold(0) { total, value -> total + value }
+                        println("[Total]")
+                        parseForColor("$cartTotalAmount 원", PrintColorCodeEnum.PURPLE)
+
+                        println("1.주문      2.메뉴판")
+                        val orderSelection = checkReadlnValidation(1, 2)
+                        if (orderSelection == -1) continue
+                        if (orderSelection == 2) continue
+
                         //잔고보다 적을시 뒤로
                         if (cartTotalAmount > clientWallet) {
                             println("현재 잔액은 ${clientWallet}원 으로 ${cartTotalAmount - clientWallet}원이 부족해서 주문할 수 없습니다.")
@@ -191,3 +205,4 @@ fun addMenus(menuList: Array<MenuBoard>) {
 fun parseForColor(msg: String, printColorCodeEnum: PrintColorCodeEnum): String {
     return "${printColorCodeEnum.code} $msg ${PrintColorCodeEnum.EXIT.code}"
 }
+
