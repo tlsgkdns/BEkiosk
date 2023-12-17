@@ -9,12 +9,29 @@ open class Menu(
     // 메뉴 정보 반환
     fun displayInfo()
     {
-        println("| ${name} | ${getPrice()} | ${explanation}")
+        print("| $name | ${getPrice()} | $explanation |")
+        if(storeCount == 0) println("(품절되었습니다.)")
+        else println()
     }
-    
+    fun isSoldOut(): Boolean
+    {
+        return (storeCount == 0)
+    }
     // 가격 반환
     open fun getPrice(): Int
     {
-        return price;
+        return price
+    }
+    fun getName(): String
+    {
+        return name
+    }
+    fun getOrderCountLimit(): Int
+    {
+        return orderCountLimit
+    }
+    fun getStoreCount(): Int
+    {
+        return storeCount
     }
 }

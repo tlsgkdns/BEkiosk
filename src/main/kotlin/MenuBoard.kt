@@ -4,13 +4,11 @@ class MenuBoard
     private var keyNumber: Int)
 {
     private val menus: ArrayList<Menu> = ArrayList<Menu>()
-    
     // 메뉴보드 정보 표시
     fun displayMenuBoardInfo()
     {
         println("${keyNumber}. ${menuBoardName}")
     }
-    
     // 메뉴 리스트 정보 표시
     fun displayMenu()
     {
@@ -27,10 +25,13 @@ class MenuBoard
     {
         menus.add(menu)
     }
-
     // 메뉴보드에 등재된 메뉴 사이즈 반환
     fun getMenuSize(): Int
     {
         return menus.size
+    }
+    fun getMenu(idx: Int): Menu
+    {
+        return menus[idx - 1]
     }
 }
